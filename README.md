@@ -1,6 +1,3 @@
-Got it 👍 — you want me to **turn that walkthrough into a polished `README.md`** for your GitHub repo. Here’s a ready-to-drop-in version:
-
----
 
 # Polynomial Constant Finder (`solve_c.js`)
 
