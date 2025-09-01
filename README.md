@@ -1,56 +1,111 @@
 
-# Polynomial Constant Finder (`solve_c.js`)
+## 📌 Problem Statement
 
-This project solves for the constant term `c` in a quadratic polynomial:
+We need to solve a quadratic polynomial equation:
 
 $$
-f(x) = ax^2 + bx + c
+f(x) = ax^2 + bx + c = 0
 $$
 
-given input data in JSON files.
-It supports two solving strategies depending on the input format.
+and find the value of the constant term **c**.
+
+The inputs are provided in **two JSON files**:
+
+1. **Roots JSON** – contains the roots of the polynomial (if available).
+2. **Points JSON** – contains values of the function `f(x) = y` for given `x` values.
+
+The twist:
+
+* The numbers in JSON are stored in **arbitrary bases (2–36)**, not just decimal.
+* Each number is represented as:
+
+  ```json
+  { "base": "b", "value": "s" }
+  ```
+
+  where `"b"` is the base and `"s"` is the string value in that base.
+
+The task is to:
+
+1. **Decode** the inputs into integers.
+2. **Formulate equations** based on the given data.
+3. **Solve for c** using an appropriate mathematical method.
+4. **Print the value of c** (either as an integer or reduced fraction).
 
 ---
 
-## 🔎 Quick Summary
+## 🔎 What the Code Does
 
-* Accepts JSON files where numbers are stored as `{ "base": b, "value": s }`.
-* Uses **BigInt** for exact integer arithmetic (arbitrary precision).
-* **Two solving modes:**
+The program `solve_c.js` handles two scenarios:
 
-  * **Mode A (roots + point):**
-    With two roots (`r1`, `r2`) and one point `(x,y)`, solves `c` using the **factor method**.
-  * **Mode B (points only):**
-    With 3 points `(x,y)`, solves `c` using **Cramer’s rule** on a 3×3 system.
-* Outputs `c` as an integer or reduced fraction (`num/den`).
+### **Mode A – Roots + One Point**
+
+* Input: two roots (`r1`, `r2`) and one point `(x0, y0)`.
+* Method: **Factor form of quadratic**
+
+  $$
+  f(x) = a(x-r_1)(x-r_2)
+  $$
+
+  * Use point `(x0,y0)` to solve for `a`.
+  * Then compute:
+
+    $$
+    c = a \cdot r_1 r_2
+    $$
+
+### **Mode B – Three Points**
+
+* Input: three points `(x1,y1)`, `(x2,y2)`, `(x3,y3)`.
+* Method: **Cramer’s Rule** on a 3×3 linear system:
+
+  $$
+  \begin{bmatrix}
+  x_1^2 & x_1 & 1 \\
+  x_2^2 & x_2 & 1 \\
+  x_3^2 & x_3 & 1
+  \end{bmatrix}
+  \begin{bmatrix}
+  a \\ b \\ c
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+  y_1 \\ y_2 \\ y_3
+  \end{bmatrix}
+  $$
+* Solve for `c` as:
+
+  $$
+  c = \frac{\det(A_c)}{\det(A)}
+  $$
+
+### **Common Features**
+
+* Uses **BigInt** for exact integer arithmetic (no overflow).
+* Handles **arbitrary base numbers** (2–36).
+* Ensures results are simplified (prints integer or fraction).
 
 ---
 
-## 📂 File Overview
-
-* **`solve_c.js`** – main program.
-* **Sample inputs:**
-
-  * `roots.json` (example roots input for Mode A).
-  * `points.json` (example points input).
+```
 
 ---
 
-## ⚡ Usage
+## ⚡ How to Run
 
-### Run in **Mode A** (roots + point)
+### Case 1: Roots + Point
 
 ```bash
 node solve_c.js --roots roots.json --points points.json
 ```
 
-### Run in **Mode B** (points only)
+### Case 2: Three Points
 
 ```bash
 node solve_c.js --points points.json
 ```
 
-### Use only the first `k` points (from JSON `keys.k`)
+### Optional: Use first `k` points (from JSON metadata)
 
 ```bash
 node solve_c.js --points points.json --use-k
@@ -58,97 +113,24 @@ node solve_c.js --points points.json --use-k
 
 ---
 
-## 📖 Input Format
+## 📖 Example Input & Output
 
-### Example (points JSON)
+### Input (`points.json`)
 
 ```json
 {
-  "keys": { "n": 4, "k": 3 },
+  "keys": { "n": 3, "k": 3 },
   "1": { "base": "10", "value": "4" },
   "2": { "base": "2", "value": "111" },
   "3": { "base": "10", "value": "12" }
 }
 ```
 
-* `base`: number system (2–36).
-* `value`: string representation in that base.
-* JSON key (`"1"`, `"2"`, …) = the `x` coordinate.
-* Decoded value = `y`.
+### Decoded
 
----
+* (1, 4), (2, 7), (3, 12)
 
-## 🧮 How It Works (Math Behind the Code)
-
-### Mode A – Factor Method (roots + point)
-
-Polynomial from roots:
-
-$$
-f(x) = a(x-r_1)(x-r_2)
-$$
-
-Using point `(x0, y0)`:
-
-$$
-a = \frac{y_0}{(x_0-r_1)(x_0-r_2)}
-$$
-
-Constant:
-
-$$
-c = a \cdot r_1 r_2
-$$
-
----
-
-### Mode B – Cramer’s Rule (3 points)
-
-System:
-
-$$
-\begin{bmatrix}
-x_1^2 & x_1 & 1 \\
-x_2^2 & x_2 & 1 \\
-x_3^2 & x_3 & 1
-\end{bmatrix}
-\begin{bmatrix}
-a \\ b \\ c
-\end{bmatrix}
-=
-\begin{bmatrix}
-y_1 \\ y_2 \\ y_3
-\end{bmatrix}
-$$
-
-By **Cramer’s rule**:
-
-$$
-c = \frac{\det(A_c)}{\det(A)}
-$$
-
-where $A_c$ is `A` with its 3rd column replaced by `y`.
-
----
-
-## 🧾 Example Run
-
-Input:
-
-```json
-{
-  "1": { "base": "10", "value": "4" },
-  "2": { "base": "2", "value": "111" },
-  "3": { "base": "10", "value": "12" }
-}
-```
-
-Steps:
-
-* Decode → `(1,4)`, `(2,7)`, `(3,12)`.
-* Solve with Cramer → `c = 3`.
-
-Output:
+### Output
 
 ```
 Used points (keys): 1, 2, 3
@@ -157,18 +139,10 @@ c = 3
 
 ---
 
-## ⚠️ Edge Cases & Pitfalls
+## ⚠️ Edge Cases
 
-* **Division by zero:** If evaluation point equals a root, denominator vanishes.
-* **Degenerate triples:** If all 3 points lie on a line or duplicate x-values → determinant = 0.
-* **Base validation:** Only bases 2–36 supported.
-* **Large inputs:** Arbitrary length handled via `BigInt`, but slower.
+* **Invalid inputs:** bases outside 2–36, or non-digit characters.
+* **Duplicate points:** determinant becomes 0 (no unique quadratic).
+* **Roots case:** denominator zero if the chosen point is also a root.
 
----
-
-## 📦 Submission
-
-Push your repo to GitHub, include this `README.md`, and provide outputs as required.
-
----
 
